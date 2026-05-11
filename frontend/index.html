@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Планировщик тренировок</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, 'Segoe UI', sans-serif;
+            background-color: #eef2f8;
+            padding: 30px 20px;
+            color: #0a2b3e;
+        }
+
+        .container {
+            max-width: 1350px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #0f2f4f;
+        }
+
+        .desc {
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+            border-left: 3px solid #2a6f8f;
+            padding-left: 12px;
+            color: #2a4b6e;
+        }
+
+        .add-panel {
+            background: white;
+            padding: 16px;
+            border-radius: 14px;
+            margin-bottom: 20px;
+            border: 1px solid #cbdde6;
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .field {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 5px;
+            color: #1f5880;
+        }
+
+        input, select, button {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #c6d8e8;
+            font-size: 0.85rem;
+            background: white;
+            width: 100%;
+        }
+
+        button {
+            background-color: #1f5880;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        button:hover {
+            background-color: #0e3e5e;
+        }
+
+        .bar {
+            background: white;
+            padding: 10px 16px;
+            border-radius: 14px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid #cbdde6;
+        }
+
+        .filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filters select, .filters input {
+            width: auto;
+        }
+
+        .counter {
+            background: #e3edf5;
+            padding: 4px 16px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .board {
+            display: flex;
+            gap: 18px;
+            overflow-x: auto;
+        }
+
+        .column {
+            background: #e3edf5;
+            border-radius: 16px;
+            min-width: 260px;
+            width: 260px;
+            padding: 12px 10px;
+            border: 1px solid #c2d5e6;
+        }
+
+        .col-title {
+            font-weight: 700;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            border: 1px solid #caddf0;
+        }
+
+        .tasks {
+            min-height: 380px;
+            border-radius: 12px;
+            padding: 4px;
+        }
+
+        .card {
+            background: white;
+            padding: 10px 12px;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            cursor: grab;
+            border-left: 4px solid #2a6f8f;
+        }
+
+        .card:active {
+            cursor: grabbing;
+        }
+
+        .dragging {
+            opacity: 0.4;
+        }
+
+        .drag-over {
+            background-color: #cfe0f0;
+        }
+
+        .card-name {
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .card-desc {
+            font-size: 0.75rem;
+            color: #2f5a7a;
+            margin-bottom: 10px;
+        }
+
+        .card-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .card-actions button {
+            background: #eef2f8;
+            border: none;
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            width: auto;
+            color: #1f5880;
+            border-radius: 20px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1f5880;
+            color: white;
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🏋️‍♂️ Фитнес-планер</h1>
+    <div class="desc">Планируй тренировки, забеги, растяжку и следи за прогрессом. Перетаскивай карточки между колонками.</div>
+
+    <div class="add-panel">
+        <div class="row">
+            <div class="field">
+                <label>Название тренировки</label>
+                <input type="text" id="taskTitle" placeholder="Йога, бег, кроссфит">
+            </div>
+            <div class="field">
+                <label>Описание</label>
+                <input type="text" id="taskDesc" placeholder="Длительность, сложность">
+            </div>
+            <div class="field">
+                <label>Статус</label>
+                <select id="taskStatus">
+                    <option value="todo">Запланировано</option>
+                    <option value="inprogress">В процессе</option>
+                    <option value="review">На проверке (результат)</option>
+                    <option value="done">Завершено</option>
+                </select>
+            </div>
+            <div class="field">
+                <button id="addBtn">➕ Добавить</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="bar">
+        <div class="filters">
+            <select id="filterStatus">
+                <option value="all">Все статусы</option>
+                <option value="todo">Запланировано</option>
+                <option value="inprogress">В процессе</option>
+                <option value="review">На проверке</option>
+                <option value="done">Завершено</option>
+            </select>
+            <input type="text" id="searchInput" placeholder="Поиск">
+            <button id="resetFilters">Сброс</button>
+        </div>
+        <div class="counter" id="totalCounter">Задач: 0</div>
+    </div>
+
+    <div class="board" id="board">
+        <div class="column" data-status="todo">
+            <div class="col-title">Запланировано <span id="todoCount">0</span></div>
+            <div class="tasks" data-list="todo"></div>
+        </div>
+        <div class="column" data-status="inprogress">
+            <div class="col-title">В процессе <span id="progressCount">0</span></div>
+            <div class="tasks" data-list="inprogress"></div>
+        </div>
+        <div class="column" data-status="review">
+            <div class="col-title">На проверке <span id="reviewCount">0</span></div>
+            <div class="tasks" data-list="review"></div>
+        </div>
+        <div class="column" data-status="done">
+            <div class="col-title">Завершено <span id="doneCount">0</span></div>
+            <div class="tasks" data-list="done"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let tasks = [];
+    let draggingId = null;
+
+    const statusNames = {
+        todo: 'Запланировано',
+        inprogress: 'В процессе',
+        review: 'На проверке',
+        done: 'Завершено'
+    };
+    const colList = ['todo', 'inprogress', 'review', 'done'];
+
+    function save() {
+        localStorage.setItem('sportPlanner', JSON.stringify(tasks));
+    }
+
+    function load() {
+        let data = localStorage.getItem('sportPlanner');
+        if(data) {
+            tasks = JSON.parse(data);
+        } else {
+            tasks = [
+                { id: Date.now()+1, title: 'Утренняя пробежка', desc: '5 км', status: 'todo' },
+                { id: Date.now()+2, title: 'Йога на гибкость', desc: '30 мин', status: 'inprogress' },
+                { id: Date.now()+3, title: 'Кроссфит WOD', desc: 'Синди', status: 'review' },
+                { id: Date.now()+4, title: 'Запись результатов', desc: 'Заполнить дневник', status: 'done' }
+            ];
+        }
+    }
+
+    function msg(text) {
+        let old = document.querySelector('.toast');
+        if(old) old.remove();
+        let d = document.createElement('div');
+        d.className = 'toast';
+        d.innerText = text;
+        document.body.appendChild(d);
+        setTimeout(() => d.remove(), 2000);
+    }
+
+    function render() {
+        let filter = document.getElementById('filterStatus').value;
+        let search = document.getElementById('searchInput').value.toLowerCase();
+
+        let filtered = tasks.filter(t => {
+            if(filter !== 'all' && t.status !== filter) return false;
+            if(search && !t.title.toLowerCase().includes(search) && !t.desc.toLowerCase().includes(search)) return false;
+            return true;
+        });
+
+        let counts = { todo:0, inprogress:0, review:0, done:0 };
+        for(let t of tasks) counts[t.status]++;
+
+        document.getElementById('todoCount').innerText = counts.todo;
+        document.getElementById('progressCount').innerText = counts.inprogress;
+        document.getElementById('reviewCount').innerText = counts.review;
+        document.getElementById('doneCount').innerText = counts.done;
+        document.getElementById('totalCounter').innerText = 'Задач: ' + tasks.length;
+
+        for(let col of colList) {
+            let container = document.querySelector(`.tasks[data-list="${col}"]`);
+            if(!container) continue;
+            let items = filtered.filter(t => t.status === col);
+            container.innerHTML = '';
+            for(let item of items) {
+                let card = document.createElement('div');
+                card.className = 'card';
+                card.setAttribute('draggable', 'true');
+                card.setAttribute('data-id', item.id);
+                card.innerHTML = `
+                    <div class="card-name">${escapeHtml(item.title)}</div>
+                    <div class="card-desc">${escapeHtml(item.desc)}</div>
+                    <div class="card-actions">
+                        <button class="editBtn" data-id="${item.id}">ред</button>
+                        <button class="delBtn" data-id="${item.id}">удалить</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            }
+        }
+        attachDragEvents();
+        attachActionButtons();
+    }
+
+    function escapeHtml(str) {
+        if(!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if(m === '&') return '&amp;';
+            if(m === '<') return '&lt;';
+            return '&gt;';
+        });
+    }
+
+    function attachDragEvents() {
+        document.querySelectorAll('.card').forEach(card => {
+            card.removeEventListener('dragstart', onDragStart);
+            card.removeEventListener('dragend', onDragEnd);
+            card.addEventListener('dragstart', onDragStart);
+            card.addEventListener('dragend', onDragEnd);
+        });
+        document.querySelectorAll('.tasks').forEach(zone => {
+            zone.removeEventListener('dragover', onDragOver);
+            zone.removeEventListener('dragleave', onDragLeave);
+            zone.removeEventListener('drop', onDrop);
+            zone.addEventListener('dragover', onDragOver);
+            zone.addEventListener('dragleave', onDragLeave);
+            zone.addEventListener('drop', onDrop);
+        });
+    }
+
+    function onDragStart(e) {
+        let card = e.target.closest('.card');
+        if(!card) return;
+        draggingId = parseInt(card.getAttribute('data-id'));
+        e.dataTransfer.setData('text/plain', draggingId);
+        card.classList.add('dragging');
+    }
+
+    function onDragEnd(e) {
+        let card = e.target.closest('.card');
+        if(card) card.classList.remove('dragging');
+        document.querySelectorAll('.tasks').forEach(z => z.classList.remove('drag-over'));
+        draggingId = null;
+    }
+
+    function onDragOver(e) {
+        e.preventDefault();
+        e.currentTarget.classList.add('drag-over');
+    }
+
+    function onDragLeave(e) {
+        e.currentTarget.classList.remove('drag-over');
+    }
+
+    function onDrop(e) {
+        e.preventDefault();
+        let zone = e.currentTarget;
+        zone.classList.remove('drag-over');
+        let newStatus = zone.getAttribute('data-list');
+        if(draggingId === null || !newStatus) return;
+        let task = tasks.find(t => t.id === draggingId);
+        if(task && task.status !== newStatus) {
+            task.status = newStatus;
+            save();
+            render();
+            msg(`"${task.title}" → ${statusNames[newStatus]}`);
+        }
+        draggingId = null;
+    }
+
+    function attachActionButtons() {
+        document.querySelectorAll('.editBtn').forEach(btn => {
+            btn.removeEventListener('click', onEdit);
+            btn.addEventListener('click', onEdit);
+        });
+        document.querySelectorAll('.delBtn').forEach(btn => {
+            btn.removeEventListener('click', onDelete);
+            btn.addEventListener('click', onDelete);
+        });
+    }
+
+    function onEdit(e) {
+        let id = parseInt(e.currentTarget.getAttribute('data-id'));
+        let task = tasks.find(t => t.id === id);
+        if(!task) return;
+        let newTitle = prompt('Название тренировки', task.title);
+        if(newTitle !== null && newTitle.trim() !== '') task.title = newTitle.trim();
+        let newDesc = prompt('Описание', task.desc);
+        if(newDesc !== null) task.desc = newDesc.trim();
+        save();
+        render();
+        msg('Обновлено');
+    }
+
+    function onDelete(e) {
+        let id = parseInt(e.currentTarget.getAttribute('data-id'));
+        let idx = tasks.findIndex(t => t.id === id);
+        if(idx !== -1) {
+            let removed = tasks[idx];
+            tasks.splice(idx, 1);
+            save();
+            render();
+            msg(`Удалено: ${removed.title}`);
+        }
+    }
+
+    function add() {
+        let title = document.getElementById('taskTitle').value.trim();
+        let desc = document.getElementById('taskDesc').value.trim();
+        let status = document.getElementById('taskStatus').value;
+        if(title === '') {
+            msg('Введите название тренировки');
+            return;
+        }
+        tasks.push({
+            id: Date.now(),
+            title: title,
+            desc: desc,
+            status: status
+        });
+        save();
+        render();
+        document.getElementById('taskTitle').value = '';
+        document.getElementById('taskDesc').value = '';
+        msg('Тренировка добавлена');
+    }
+
+    function resetFilters() {
+        document.getElementById('filterStatus').value = 'all';
+        document.getElementById('searchInput').value = '';
+        render();
+        msg('Фильтры сброшены');
+    }
+
+    document.getElementById('addBtn').addEventListener('click', add);
+    document.getElementById('resetFilters').addEventListener('click', resetFilters);
+    document.getElementById('filterStatus').addEventListener('change', () => render());
+    document.getElementById('searchInput').addEventListener('input', () => render());
+
+    load();
+    render();
+</script>
+</body>
+</html>
